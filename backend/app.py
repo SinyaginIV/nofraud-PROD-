@@ -277,7 +277,14 @@ def upload():
 def train():
     try:
         file = request.files['file']
-        df = pd.read_csv(file)
+        df = pd.read_csv(file_path, encoding='utf-8', sep=',', engine='python')
+
+        # Удалим пробелы у имён колонок (если они случайно есть)
+        df.columns = [col.strip() for col in df.columns]
+
+        # Для отладки — вывести в логи
+        print("Загруженные столбцы:", df.columns.tolist())
+        print("Первые строки:", df.head(1).to_dict())
         features = [col for col in df.columns if col not in ['DateTime', 'Fraud']]
         if 'Fraud' not in df.columns or len(features) < 5:
             return jsonify({'error': 'Для обучения нужны минимум 5 признаков + DateTime + Fraud.'}), 400
