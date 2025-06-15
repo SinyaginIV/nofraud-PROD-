@@ -502,9 +502,12 @@ h2 {
     </p>
   </div>
 
-  <script>
+    <script>
     function toggleMenu() {
       document.getElementById("sideMenu").classList.toggle("show");
+    }
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
     }
 
     let csvReady = false;
@@ -519,11 +522,15 @@ h2 {
       const loader = document.querySelector('.loader');
       loader.style.display = 'block';
       loader.classList.remove('done');
-      document.getElementById('overlay').classList.remove('hidden');
+
+      const tableContainer = document.getElementById('previewTable');
 
       const data = new FormData();
       data.append('file', input.files[0]);
-      data.append('modelType', document.getElementById('modelSelect').value);
+      const modelType = document.getElementById('modelSelect').value;
+      data.append('modelType', modelType);
+
+      document.getElementById('overlay').classList.remove('hidden');
 
       fetch('https://nofraud-prod-production.up.railway.app/train', {
         method: 'POST',
@@ -537,34 +544,33 @@ h2 {
           document.getElementById('overlay').classList.add('hidden');
 
           if (data.error) {
-            alert("Ошибка: " + data.error);
+            alert("Ошибка от сервера: " + data.error);
             return;
           }
 
           const table = document.createElement('table');
-          const header = document.createElement('tr');
+          const headerRow = document.createElement('tr');
           data.columns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col;
-            header.appendChild(th);
+            headerRow.appendChild(th);
           });
-          table.appendChild(header);
+          table.appendChild(headerRow);
 
-          data.rows.forEach(row => {
-            const tr = document.createElement('tr');
-            if (row[row.length - 1] === 1 || row[row.length - 2] === 1) {
-              tr.classList.add('fraud');
-            }
-            row.forEach(cell => {
-              const td = document.createElement('td');
-              td.textContent = cell;
-              tr.appendChild(td);
-            });
-            table.appendChild(tr);
-          });
+data.rows.forEach(row => {
+  const tr = document.createElement('tr');
+  // Fraud — всегда последний столбец для NEW, предпоследний — если есть Reason (TEST)
+  if (row[row.length - 1] === 1 || row[row.length - 2] === 1) tr.classList.add('fraud');
+  row.forEach(cell => {
+    const td = document.createElement('td');
+    td.textContent = cell;
+    tr.appendChild(td);
+  });
+  table.appendChild(tr);
+});
 
-          document.getElementById('previewTable').innerHTML = '';
-          document.getElementById('previewTable').appendChild(table);
+          tableContainer.innerHTML = '';
+          tableContainer.appendChild(table);
 
           document.getElementById('nofraudSnap').src = 'https://nofraud-prod-production.up.railway.app/static/nofraud_snap.png?' + new Date().getTime();
           document.getElementById('nofraudSnap').style.display = 'block';
@@ -573,70 +579,158 @@ h2 {
           document.getElementById("downloadPdf").style.display = 'inline';
 
           csvReady = true;
-        }, 1000);
+        }, 2000);
       })
       .catch(() => {
         loader.style.display = 'none';
-        alert("Ошибка при загрузке.");
-      });
-    }
-
-    function trainModel() {
-      const input = document.getElementById('trainFile');
-      if (!input.files[0]) {
-        alert("Выберите файл для обучения.");
-        return;
-      }
-
-      const loader = document.getElementById('loader');
-      loader.style.display = 'block';
-      loader.classList.remove('done');
-      document.getElementById('overlay').classList.remove('hidden');
-
-      const data = new FormData();
-      data.append('file', input.files[0]);
-
-      fetch('https://nofraud-prod-production.up.railway.app/train', {
-        method: 'POST',
-        body: data
-      })
-      .then(response => response.json())
-      .then(result => {
-        loader.classList.add('done');
-        setTimeout(() => {
-          loader.style.display = 'none';
-          document.getElementById('overlay').classList.add('hidden');
-        }, 1000);
-        alert(result.message || result.error || "Обучение завершено.");
-      })
-      .catch(() => {
-        loader.classList.add('done');
-        setTimeout(() => {
-          loader.style.display = 'none';
-          document.getElementById('overlay').classList.add('hidden');
-        }, 1000);
-        alert("Ошибка при обучении.");
+        alert("❌ Ошибка при анализе файла.");
       });
     }
 
     document.getElementById('downloadCsv').onclick = function() {
-      if (csvReady) {
-        window.open('https://nofraud-prod-production.up.railway.app/download', '_blank');
-      }
+      if (!csvReady) return;
+      window.open('https://nofraud-prod-production.up.railway.app/download', '_blank');
     };
     document.getElementById('downloadPdf').onclick = function() {
-      if (csvReady) {
-        window.open('https://nofraud-prod-production.up.railway.app/report', '_blank');
-      }
-    };
-
-    window.onload = function () {
-      if (localStorage.getItem("autoDark") === "true") {
-        document.body.classList.add("dark-mode");
-        document.getElementById("darkModeToggle").checked = true;
-        document.getElementById("autoDarkToggle").checked = true;
-      }
+      if (!csvReady) return;
+      window.open('https://nofraud-prod-production.up.railway.app/report', '_blank');
     };
   </script>
+
+<div id="authOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:1000; display:flex; justify-content:center; align-items:center;">
+  <div style="background:white; padding:30px; border-radius:8px; box-shadow:0 0 20px black; text-align:center;">
+    <h2>Авторизация</h2>
+    <input id="login" placeholder="Логин" style="margin:10px; padding:8px;"><br>
+    <input id="password" placeholder="Пароль" type="password" style="margin:10px; padding:8px;"><br>
+    <button onclick="authorize()">Войти</button>
+    <p id="authError" style="color:red; display:none;">Неверный логин или пароль</p>
+  </div>
+</div>
+
+<script>
+function authorize() {
+  const login = document.getElementById('login').value;
+  const password = document.getElementById('password').value;
+  if (login === 'ADMIN' && password === 'ADMIN') {
+    document.getElementById('authOverlay').style.display = 'none';
+  } else {
+    document.getElementById('authError').style.display = 'block';
+  }
+}
+</script>
+
+<div id="logContainer"></div>
+
+<script>
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  }
+
+  function toggleAutoDark() {
+    const enabled = document.getElementById("autoDarkToggle").checked;
+    localStorage.setItem("autoDark", enabled);
+  }
+
+  function toggleLogs(type) {
+    const logBox = document.getElementById("logContainer");
+    if (type === 'flask') {
+      if (document.getElementById("flaskLogsToggle").checked) {
+        logBox.style.display = 'block';
+        logBox.innerText = "[Flask] * Running on http://127.0.0.1:5000\n[Flask] Debugger is active...";
+      } else {
+        logBox.style.display = 'none';
+      }
+    } else if (type === 'http') {
+      if (document.getElementById("httpLogsToggle").checked) {
+        logBox.style.display = 'block';
+        logBox.innerText = "[HTTP] Serving on port 8000...\n[HTTP] GET /index_v3_4.html 200 OK";
+      } else {
+        logBox.style.display = 'none';
+      }
+    }
+  }
+
+function trainModel() {
+  const trainInput = document.getElementById('trainFile');
+  if (!trainInput.files[0]) {
+    alert("Пожалуйста, выберите обучающий файл CSV.");
+    return;
+  }
+
+  const loader = document.getElementById('loader');
+  loader.classList.remove('done');
+  loader.style.display = 'block';
+  document.getElementById('overlay').classList.remove('hidden');
+
+  const data = new FormData();
+  data.append('file', trainInput.files[0]);
+
+  fetch('http://localhost:5000/train', {
+    method: 'POST',
+    body: data
+  })
+  .then(res => res.json())
+  .then(resp => {
+    loader.classList.add('done');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.getElementById('overlay').classList.add('hidden');
+    }, 1000);
+
+    if (resp.message) {
+      alert(resp.message);
+    } else if (resp.error) {
+      alert('Ошибка: ' + resp.error);
+    }
+  })
+  .catch(() => {
+    alert("Ошибка при обучении модели.");
+    loader.classList.add('done');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.getElementById('overlay').classList.add('hidden');
+    }, 1000);
+  });
+}
+
+function logTrainStatus(msg) {
+  let logBox = document.getElementById('logContainer');
+  logBox.style.display = 'block';
+  logBox.innerText += msg + '\n';
+}
+
+function updateLoaderPercent(percent) {
+  let loader = document.getElementById('loader');
+  let id = 'loader_percent';
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    el.style.position = 'absolute';
+    el.style.top = '50%';
+    el.style.left = '50%';
+    el.style.transform = 'translate(-50%,-50%)';
+    el.style.fontSize = '20px';
+    el.style.fontWeight = 'bold';
+    el.style.color = '#7051c3';
+    loader.appendChild(el);
+  }
+  el.innerText = percent + '%';
+  if (percent >= 100) setTimeout(()=>el.remove(),900);
+}
+
+  window.onload = function () {
+    if (localStorage.getItem("autoDark") === "true") {
+      document.body.classList.add("dark-mode");
+      document.getElementById("darkModeToggle").checked = true;
+      document.getElementById("autoDarkToggle").checked = true;
+    } else {
+      document.getElementById("autoDarkToggle").checked = false;
+    }
+  };
+</script>
+
+
 </body>
 </html>

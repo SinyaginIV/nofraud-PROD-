@@ -277,24 +277,28 @@ def upload():
 def train():
     try:
         file = request.files['file']
-        df = pd.read_csv(file_path, encoding='utf-8', sep=',', engine='python')
+        file_path = os.path.join(PROCESSED_DIR, file.filename)
+        file.save(file_path)
 
-        # Удалим пробелы у имён колонок (если они случайно есть)
+        df = pd.read_csv(file_path, encoding='utf-8', sep=',', engine='python')
         df.columns = [col.strip() for col in df.columns]
 
-        # Для отладки — вывести в логи
+        # Лог для отладки на Railway
         print("Загруженные столбцы:", df.columns.tolist())
         print("Первые строки:", df.head(1).to_dict())
+
         features = [col for col in df.columns if col not in ['DateTime', 'Fraud']]
+
         if 'Fraud' not in df.columns or len(features) < 5:
             return jsonify({'error': 'Для обучения нужны минимум 5 признаков + DateTime + Fraud.'}), 400
-        
+
         joblib.dump(features, 'model/new_model_features.pkl')
         X = df[features]
         y = df['Fraud']
         model_new = RandomForestClassifier(n_estimators=100, random_state=42)
         model_new.fit(X, y)
         joblib.dump(model_new, 'model/new_model.pkl')
+
         return jsonify({'message': 'Новая модель успешно обучена.'})
     except Exception as e:
         import traceback
