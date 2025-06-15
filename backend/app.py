@@ -107,7 +107,7 @@ def generate_report_pdf(
     story.append(Paragraph('<b>nofraud! by Sinyagin Ilya</b>', style_center))
     story.append(Spacer(1, 14))
     story.append(Paragraph(
-        f"<b>Дата создания отчёта:</b> {datetime.now(pytz.timezone("Europe/Moscow")).strftime('%Y-%m-%d %H:%M:%S')}", style_normal_center))
+        f"<b>Дата создания отчёта:</b> {datetime.now(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M:%S')}", style_normal_center))
     story.append(Spacer(1, 10))
     story.append(Paragraph(f"<b>Проверяемый файл:</b> {input_filename}", style_normal_center))
     story.append(Spacer(1, 70))
