@@ -159,6 +159,10 @@ def generate_report_pdf(
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index_v6.0.1.html')
+
 @app.route('/download', methods=['GET'])
 def download():
     files = sorted(Path(PROCESSED_DIR).glob('result_*.csv'), key=os.path.getmtime, reverse=True)
