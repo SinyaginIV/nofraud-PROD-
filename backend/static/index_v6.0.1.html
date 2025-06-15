@@ -451,11 +451,36 @@ h2 {
     <h3>👋 Добро пожаловать!</h3>
     <p>Это веб-приложение предназначено для выявления мошеннических транзакций на основе анализа CSV-файлов с операциями.</p>
   </div>
-  <div id="instructionBox" style="display:inline-block; background:#e3f2fd; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
-    <span onclick="document.getElementById('instructionBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
-    <h3>📖 Инструкция</h3>
-    <p>1. Загрузите файл CSV<br>2. Нажмите «Проверить»<br>3. Просмотрите таблицу и графики<br>4. Скачайте результаты</p>
-  </div>
+<div id="instructionBox" style="display:inline-block; background:#e3f2fd; border-radius:10px; padding:15px; margin:10px; width:450px; position:relative; font-size:15px;">
+  <span onclick="document.getElementById('instructionBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+  <h3>📖 Инструкция</h3>
+  <p>
+    1. 📂 Загрузите CSV-файл с транзакциями.<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;• Для тестовой модели: <code>DateTime, Amount, Region, DeviceType, IsAbroad, TxCountLastHour, IsNight</code><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;• Для новой модели: любые числовые признаки + <code>DateTime</code> и <code>Fraud</code> (всего не менее 7 столбцов).<br><br>
+
+    2. 🧠 Выберите модель:
+    <ul style="margin-top: 5px; margin-bottom: 5px;">
+      <li><b>Тестовая</b> — встроенная модель для проверки.</li>
+      <li><b>Новая</b> — сначала обучите модель, затем примените.</li>
+    </ul>
+
+    3. ✅ Нажмите «Проверить», чтобы отправить файл на анализ.<br><br>
+
+    4. 📊 Просмотрите результаты:
+    <ul style="margin-top: 5px; margin-bottom: 5px;">
+      <li>Таблица с флагом <code>Fraud</code></li>
+      <li>График вероятностей с объяснением SHAP</li>
+    </ul>
+
+    5. ⬇️ Скачайте результаты:
+    <ul style="margin-top: 5px;">
+      <li><b>CSV</b> — прогнозы</li>
+      <li><b>PDF</b> — отчёт с визуализацией</li>
+    </ul>
+  </p>
+  <p style="color: red; font-weight: bold; margin-top: 10px;">⚠️ Лимит строк в файле на PROD ~100 000 строк</p>
+</div>
   <div id="authorBox" style="display:inline-block; background:#e9efff; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
     <span onclick="document.getElementById('authorBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
     <h3>👨‍💻 Автор</h3>
@@ -599,13 +624,13 @@ function uploadFile() {
   </script>
 
 <div id="authOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:1000; display:flex; justify-content:center; align-items:center;">
-  <div style="background:white; padding:30px; border-radius:8px; box-shadow:0 0 20px black; text-align:center;">
+  <form onsubmit="authorize(); return false;" style="background:white; padding:30px; border-radius:8px; box-shadow:0 0 20px black; text-align:center;">
     <h2>Авторизация</h2>
-    <input id="login" placeholder="Логин" style="margin:10px; padding:8px;"><br>
-    <input id="password" placeholder="Пароль" type="password" style="margin:10px; padding:8px;"><br>
-    <button onclick="authorize()">Войти</button>
+    <input id="login" placeholder="Логин" style="margin:10px; padding:8px;" required><br>
+    <input id="password" placeholder="Пароль" type="password" style="margin:10px; padding:8px;" required><br>
+    <button type="submit">Войти</button>
     <p id="authError" style="color:red; display:none;">Неверный логин или пароль</p>
-  </div>
+  </form>
 </div>
 
 <script>
