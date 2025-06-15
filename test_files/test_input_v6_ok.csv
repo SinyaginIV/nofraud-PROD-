@@ -1,0 +1,5 @@
+DateTime,Amount,Region,DeviceType,IsAbroad,TxCountLastHour,IsNight
+2025-01-01 10:00,1234.56,IN,Mobile,1,2,0
+2025-01-02 12:30,4321.0,CN,Desktop,0,5,1
+2025-01-03 18:45,2143.89,US,Tablet,0,3,0
+2025-01-03 20:00,19143.89,US,Tablet,1,33,1

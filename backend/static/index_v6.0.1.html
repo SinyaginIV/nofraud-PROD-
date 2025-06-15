@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <title>nofraud! v6.12.15</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f8f9fa;
+      color: #000;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      z-index: 10;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background-color: mediumaquamarine;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3c7e68;
+      transition: 0.5s;
+    }
+    button#button_train_model {
+      background-color: hotpink;
+    }
+    button#button_train_model:hover {
+      background-color: #B33C7A;
+      transition: 0.5s;
+    }
+    #fileInput {
+    padding: 10px;
+    margin-bottom: 20px;
+    }
+    #logo {
+      height: 32px;
+    }
+    #title {
+      display: flex;
+      align-items: center;
+    }
+    #menu-icon {
+      font-size: 28px;
+      cursor: pointer;
+    }
+    #sideMenu {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 15px;
+      width: 260px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 20;
+    }
+    #sideMenu.show {
+      display: block;
+    }
+    .dark-mode #sideMenu {
+      background-color: #222;
+      color: white;
+      border-color: #444;
+    }
+    .switch {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .switch input {
+      display: none;
+    }
+    .slider {
+      width: 40px;
+      height: 20px;
+      background-color: #ccc;
+      border-radius: 20px;
+      margin-right: 10px;
+      position: relative;
+    }
+    .slider:before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 16px;
+      height: 16px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+      background-color: #222;
+    }
+    .dark-mode {
+      background-color: #121212;
+      color: white;
+    }
+    .dark-mode table {
+      background-color: #1e1e1e;
+      color: white;
+    }
+    .chart {
+      width: 80%;
+      margin: 40px auto 20px auto;
+      text-align: center;
+    }
+    .chart img {
+      display: block;
+      margin: 0 auto;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+    }
+    tr.fraud {
+      background-color: #ffdddd;
+      color: black;
+    }
+    .dark-mode tr.fraud {
+      background-color: #ffdddd;
+      color: black;
+    }
+    #result {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+@property --loader_l0{
+  syntax: "<percentage>";
+  initial-value: 0%;
+  inherits: false;
+}
+@property --loader_l1{
+  syntax: "<percentage>";
+  initial-value: 0%;
+  inherits: false;
+}
+
+.loader{
+  /*Since it's gonna be circle, width and height are the same.*/
+  --width:64px;
+  position:absolute;
+  left:calc(50% - calc(var(--width) / 2));
+  top:calc(50% - calc(var(--width) / 2));
+  perspective:1000px;
+  z-index: 1000;
+}
+.loader.done {
+  opacity: 0;
+  transition: opacity 2s ease-in;
+}
+.loader-done{
+  position:absolute;
+  display:none;
+  border-top:3px solid #7051c3;
+  border-left:3px solid #7051c3;
+  border-top-left-radius:3px;
+  width:calc(var(--width) / 6);
+  height:calc(var(--width) / 3);
+  top:calc(var(--width) / 2 - 15px);
+  left:calc(var(--width) / 2 - 7px);
+  transform:rotateZ(220deg);
+  animation:loaderFadeIn .6s;
+  opacity: 0;
+  transition: opacity 2s ease-in;
+}
+.circle{
+  position:absolute;
+  top:0;
+  left:0;
+  width:var(--width);
+  height:var(--width);
+  transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+.circle::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  padding: 3px;
+  border-radius: 100%;
+  background: linear-gradient(
+    45deg,
+    #a947f4 0%,
+    #f24479 var(--loader_l0),
+    #a947f4 var(--loader_l1), 
+    #f24479 100%
+  );
+  -webkit-mask: 
+     linear-gradient(#fff 0 0) content-box, 
+     linear-gradient(#fff 0 0);
+          mask: 
+     linear-gradient(#fff 0 0) content-box, 
+     linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+
+}
+.circle.c1{
+  animation:rx 2s infinite, gradientMove 1s infinite;
+}
+.circle.c2{
+  animation:ry 1s infinite, gradientMove .5s infinite;
+}
+.circle.c3{
+  animation:rz 1.5s infinite, gradientMove .75s infinite;
+}
+
+.loader.done .circle.c1,
+.loader.done .circle.c2,
+.loader.done .circle.c3{
+  animation:rfinal .5s;
+}
+
+.loader.done .loader-done{
+  display:block;
+}
+.loader.hidden {
+  display: none;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3); /* затемнение */
+  z-index: 999; /* ниже loader */
+}
+#overlay.hidden {
+  display: none;
+}
+
+@keyframes rx{
+  from{
+    
+  }
+  50%{
+    opacity:.6;
+  }
+  100%{
+    transform: rotateZ(360deg) rotateX(180deg);
+  }
+}
+
+@keyframes ry{
+  from{
+    
+  }
+  60%{
+    filter:blur(1px);
+    opacity:.4;
+  }
+  100%{
+    transform:rotateZ(180deg) rotateY(180deg);
+  }
+}
+
+@keyframes rz{
+  from{
+    
+  }
+  40%{
+    filter:blur(1px);
+    opacity:.8;
+  }
+  100%{
+     transform:rotateZ(180deg) rotateY(-180deg);
+  }
+}
+
+@keyframes loaderFadeIn{
+  0%{opacity:0;}
+  100%{opacity:1;}
+}
+
+@keyframes gradientMove{
+  0%{
+    --button_b:0%;
+    --button_b_out:0%;
+  }
+  33%{
+    --button_b:100%;
+    --button_b_out:0%;
+  }
+  99%{
+    --button_b:100%;
+    --button_b_out:100%;
+  }
+  100%{
+    --button_b:0%;
+    --button_b_out:0%;
+  }
+}
+  
+#logContainer {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  max-height: 200px;
+  background-color: #111;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 12px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+  z-index: 100;
+}
+
+div#instructionBox {
+    color: black;
+}
+
+div#welcomeBox {
+    color: black;
+}
+
+div#authorBox {
+    color: black;
+}
+
+div#testModelBox {
+    color: black;
+}
+
+div#newModelBox {
+    color: black;
+}
+
+h2 {
+    color: black;
+}
+
+#downloadCsv {
+  background-color: #21b563; /* Excel green */
+  color: #fff;
+}
+#downloadCsv:hover {
+  background-color: #157e41;
+}
+
+#downloadPdf {
+  background-color: #ea3a24; /* Acrobat red */
+  color: #fff;
+}
+#downloadPdf:hover {
+  background-color: #ad1e10;
+}
+
+</style>
+</head>
+<body>
+  <div id="navbar">
+    <div id="title">
+      <img src="logo_nofraud.png" id="logo">
+    </div>
+    <div id="menu-icon" onclick="toggleMenu()">☰</div>
+  </div>
+
+  <div id="sideMenu" class="hidden">
+
+<label class="switch">
+  <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+  <span class="slider"></span>
+  Темная тема
+</label>
+
+<label class="switch">
+  <input type="checkbox" id="autoDarkToggle" onchange="toggleAutoDark()">
+  <span class="slider"></span>
+  Авто темная тема
+</label>
+</div>
+  <div style="text-align: center; margin-top: 100px;">
+    <h1 style="font-size: 36px;">nofraud! v6.12.15</h1>
+<div style="margin: 10px;">
+  <label for="modelSelect"><strong>Выбор модели:</strong></label>
+  <select id="modelSelect">
+    <option value="test">TEST (предобученная)</option>
+    <option value="new">NEW (пользовательская)</option>
+  </select>
+</div>
+    <input type="file" id="fileInput"><br>
+    <button onclick="uploadFile()">Проверить</button>
+<br>
+<input type="file" id="trainFile" style="margin-top:50px;">
+<br>
+<button onclick="trainModel()" id="button_train_model">Обучить!</button>
+<br>
+    <button id="downloadCsv" style="display:none;">Скачать CSV</button>
+    <button id="downloadPdf" style="display:none;">Скачать PDF</button>
+    <div id="overlay" class="hidden"></div>
+    <div class="loader hidden" id="loader">
+      <span class="loader-done"></span>
+      <span class="circle c1"></span>
+      <span class="circle c2"></span>
+      <span class="circle c3"></span>
+    </div>
+    <div id="result"></div>
+    <div id="previewTable"></div>
+
+<div class="chart">
+  <img id="nofraudSnap" src="" style="max-width:100%; display:none;">
+  <p id="nofraudSnap-desc" style="display:none;">
+    График <b>nofraud!Snap</b> показывает для каждой транзакции вероятность мошенничества.
+    Красная линия — пороговое значение, выше которого транзакция считается мошеннической.<br><br>
+    <b>Подробно:</b> Это уникальный “суперграфик” (SHAP для NEW-модели), который одновременно показывает вероятность мошенничества (score), а также в виде разноцветных столбиков — вклад каждого признака в решение модели для каждой транзакции.<br>
+    — Чем выше прозрачная полоса — тем выше вероятность фрода.<br>
+    — Цветные “слои” внизу — это вклад каждого признака (например, V1…V28, Amount и т.д.).<br>
+    — Если столбик выше 0 — признак “толкнул” решение к фроду.<br>
+    <b>Как читать:</b> Можно быстро понять, какие признаки и насколько влияют на решение. Если SHAP-слой для признака высокий — этот признак особенно важен.<br>
+    <b>График строится только для пользовательской NEW-модели.</b>
+  </p>
+</div>
+<!-- Блоки приветствия и инструкции -->
+<div id="infoBoxes" style="text-align:center; margin-top:20px;">
+  <div id="welcomeBox" style="display:inline-block; background:#e8f5e9; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
+    <span onclick="document.getElementById('welcomeBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+    <h3>👋 Добро пожаловать!</h3>
+    <p>Это веб-приложение предназначено для выявления мошеннических транзакций на основе анализа CSV-файлов с операциями.</p>
+  </div>
+  <div id="instructionBox" style="display:inline-block; background:#e3f2fd; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
+    <span onclick="document.getElementById('instructionBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+    <h3>📖 Инструкция</h3>
+    <p>1. Загрузите файл CSV<br>2. Нажмите «Проверить»<br>3. Просмотрите таблицу и графики<br>4. Скачайте результаты</p>
+  </div>
+  <div id="authorBox" style="display:inline-block; background:#e9efff; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
+    <span onclick="document.getElementById('authorBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+    <h3>👨‍💻 Автор</h3>
+    <p><b>Синягин Илья</b><br>ФГБОУ ВО «НГПУ им. К. Минина»<br>Группа: ИСТ-21</p>
+  </div>
+  <div id="testModelBox" style="display:inline-block; background:#fffbe9; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
+    <span onclick="document.getElementById('testModelBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+    <h3 style="margin-top:0; color:#b79520;">🛡️ Тестовая модель</h3>
+    <p style="margin-bottom:0;">
+      <b>Обучалась на признаках:</b> Amount, Region, DeviceType, IsAbroad, TxCountLastHour, IsNight<br>
+      <b>Размер датасета:</b> 1000 строк<br>
+      <b>Причины “фрода”:</b><br>
+      — Сумма &gt; 4000<br>
+      — Ночная транзакция<br>
+      — Заграничная транзакция<br>
+      — &gt;5 операций в час
+    </p>
+  </div>
+  <div id="newModelBox" style="display:inline-block; background:#e9ffe9; border-radius:10px; padding:15px; margin:10px; width:400px; position:relative;">
+    <span onclick="document.getElementById('newModelBox').style.display='none'" style="position:absolute; top:5px; right:10px; cursor:pointer;">❌</span>
+    <h3 style="margin-top:0; color:#23b45b;">✨ NEW-модель</h3>
+    <p style="margin-bottom:0;">
+      <b>Обучается на файле пользователя</b> (от 5 признаков)<br>
+      <b>Может анализировать любые числовые признаки</b><br>
+      <b>Визуализация:</b> “nofraud!Snap” с разложением по признакам (SHAP)
+    </p>
+  </div>
+</div>  
+<div class="chart">
+    <img id="chart1" src="" style="max-width:100%; display:none;">
+    <p id="chart1-desc" style="display:none;">
+      Этот график отображает распределение сумм всех выявленных мошеннических транзакций. 
+      Он построен на основе значений из столбца 'Amount', где транзакции были помечены как фрод. 
+      График помогает определить, какие диапазоны сумм наиболее подвержены мошенничеству.
+    </p>
+  </div>
+
+  <div class="chart">
+    <img id="chart2" src="" style="max-width:100%; display:none;">
+    <p id="chart2-desc" style="display:none;">
+      Этот график показывает, в какие часы суток чаще всего происходят мошеннические транзакции. 
+      Он строится на основе столбца 'Hour', извлечённого из временной метки 'DateTime'. 
+      График помогает выявить пиковые часы фрода, например ночное время.
+    </p>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById("sideMenu").classList.toggle("show");
+    }
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+
+    let csvReady = false;
+    function uploadFile() {
+      const input = document.getElementById('fileInput');
+      if (!input.files[0]) {
+        alert("Пожалуйста, выберите CSV-файл перед проверкой.");
+        return;
+      }
+
+      const loader = document.querySelector('.loader');
+      loader.style.display = 'block';
+      loader.classList.remove('done');
+
+      const tableContainer = document.getElementById('previewTable');
+
+      const data = new FormData();
+      data.append('file', input.files[0]);
+      const modelType = document.getElementById('modelSelect').value;
+      data.append('modelType', modelType);
+
+      document.getElementById('overlay').classList.remove('hidden');
+
+      fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: data
+      })
+      .then(response => response.json())
+      .then(data => {
+        loader.classList.add('done');
+        setTimeout(() => {
+          loader.style.display = 'none';
+          document.getElementById('overlay').classList.add('hidden');
+
+          if (data.error) {
+            alert("Ошибка от сервера: " + data.error);
+            return;
+          }
+
+          const table = document.createElement('table');
+          const headerRow = document.createElement('tr');
+          data.columns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            headerRow.appendChild(th);
+          });
+          table.appendChild(headerRow);
+
+data.rows.forEach(row => {
+  const tr = document.createElement('tr');
+  // Fraud — всегда последний столбец для NEW, предпоследний — если есть Reason (TEST)
+  if (row[row.length - 1] === 1 || row[row.length - 2] === 1) tr.classList.add('fraud');
+  row.forEach(cell => {
+    const td = document.createElement('td');
+    td.textContent = cell;
+    tr.appendChild(td);
+  });
+  table.appendChild(tr);
+});
+
+          tableContainer.innerHTML = '';
+          tableContainer.appendChild(table);
+
+          document.getElementById('nofraudSnap').src = 'http://localhost:5000/static/nofraud_snap.png?' + new Date().getTime();
+          document.getElementById('nofraudSnap').style.display = 'block';
+          document.getElementById('nofraudSnap-desc').style.display = 'block';
+          document.getElementById("downloadCsv").style.display = 'inline';
+          document.getElementById("downloadPdf").style.display = 'inline';
+
+          csvReady = true;
+        }, 2000);
+      })
+      .catch(() => {
+        loader.style.display = 'none';
+        alert("❌ Ошибка при анализе файла.");
+      });
+    }
+
+    document.getElementById('downloadCsv').onclick = function() {
+      if (!csvReady) return;
+      window.open('http://localhost:5000/download', '_blank');
+    };
+    document.getElementById('downloadPdf').onclick = function() {
+      if (!csvReady) return;
+      window.open('http://localhost:5000/report', '_blank');
+    };
+  </script>
+
+<div id="authOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:1000; display:flex; justify-content:center; align-items:center;">
+  <div style="background:white; padding:30px; border-radius:8px; box-shadow:0 0 20px black; text-align:center;">
+    <h2>Авторизация</h2>
+    <input id="login" placeholder="Логин" style="margin:10px; padding:8px;"><br>
+    <input id="password" placeholder="Пароль" type="password" style="margin:10px; padding:8px;"><br>
+    <button onclick="authorize()">Войти</button>
+    <p id="authError" style="color:red; display:none;">Неверный логин или пароль</p>
+  </div>
+</div>
+
+<script>
+function authorize() {
+  const login = document.getElementById('login').value;
+  const password = document.getElementById('password').value;
+  if (login === 'ADMIN' && password === 'ADMIN') {
+    document.getElementById('authOverlay').style.display = 'none';
+  } else {
+    document.getElementById('authError').style.display = 'block';
+  }
+}
+</script>
+
+<div id="logContainer"></div>
+
+<script>
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  }
+
+  function toggleAutoDark() {
+    const enabled = document.getElementById("autoDarkToggle").checked;
+    localStorage.setItem("autoDark", enabled);
+  }
+
+  function toggleLogs(type) {
+    const logBox = document.getElementById("logContainer");
+    if (type === 'flask') {
+      if (document.getElementById("flaskLogsToggle").checked) {
+        logBox.style.display = 'block';
+        logBox.innerText = "[Flask] * Running on http://127.0.0.1:5000\n[Flask] Debugger is active...";
+      } else {
+        logBox.style.display = 'none';
+      }
+    } else if (type === 'http') {
+      if (document.getElementById("httpLogsToggle").checked) {
+        logBox.style.display = 'block';
+        logBox.innerText = "[HTTP] Serving on port 8000...\n[HTTP] GET /index_v3_4.html 200 OK";
+      } else {
+        logBox.style.display = 'none';
+      }
+    }
+  }
+
+function trainModel() {
+  const trainInput = document.getElementById('trainFile');
+  if (!trainInput.files[0]) {
+    alert("Пожалуйста, выберите обучающий файл CSV.");
+    return;
+  }
+
+  const loader = document.getElementById('loader');
+  loader.classList.remove('done');
+  loader.style.display = 'block';
+  document.getElementById('overlay').classList.remove('hidden');
+
+  const data = new FormData();
+  data.append('file', trainInput.files[0]);
+
+  fetch('http://localhost:5000/train', {
+    method: 'POST',
+    body: data
+  })
+  .then(res => res.json())
+  .then(resp => {
+    loader.classList.add('done');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.getElementById('overlay').classList.add('hidden');
+    }, 1000);
+
+    if (resp.message) {
+      alert(resp.message);
+    } else if (resp.error) {
+      alert('Ошибка: ' + resp.error);
+    }
+  })
+  .catch(() => {
+    alert("Ошибка при обучении модели.");
+    loader.classList.add('done');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.getElementById('overlay').classList.add('hidden');
+    }, 1000);
+  });
+}
+
+function logTrainStatus(msg) {
+  let logBox = document.getElementById('logContainer');
+  logBox.style.display = 'block';
+  logBox.innerText += msg + '\n';
+}
+
+function updateLoaderPercent(percent) {
+  let loader = document.getElementById('loader');
+  let id = 'loader_percent';
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    el.style.position = 'absolute';
+    el.style.top = '50%';
+    el.style.left = '50%';
+    el.style.transform = 'translate(-50%,-50%)';
+    el.style.fontSize = '20px';
+    el.style.fontWeight = 'bold';
+    el.style.color = '#7051c3';
+    loader.appendChild(el);
+  }
+  el.innerText = percent + '%';
+  if (percent >= 100) setTimeout(()=>el.remove(),900);
+}
+
+  window.onload = function () {
+    if (localStorage.getItem("autoDark") === "true") {
+      document.body.classList.add("dark-mode");
+      document.getElementById("darkModeToggle").checked = true;
+      document.getElementById("autoDarkToggle").checked = true;
+    } else {
+      document.getElementById("autoDarkToggle").checked = false;
+    }
+  };
+</script>
+
+</body>
+</html>
