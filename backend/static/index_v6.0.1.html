@@ -666,7 +666,7 @@ function trainModel() {
   const data = new FormData();
   data.append('file', trainInput.files[0]);
 
-  fetch('http://localhost:5000/train', {
+  fetch('https://nofraud-prod-production.up.railway.app/train', {
     method: 'POST',
     body: data
   })
